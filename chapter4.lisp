@@ -97,4 +97,92 @@
 			((or (null src) (funcall fn (car src)))
 			 (values (nreverse acc) src))
 		  (push (car src) acc))))
+
+(defun most (fn lst)
+	(if (null lst)
+		(values nil nil)
+		(let* ((wins (car lst))
+				(max (funcall fn wins)))
+			(dolist (obj (cdr lst))
+				(let ((score (funcall fn obj)))
+					(when (> score max)
+						(setq wins obj
+							  max score))))
+			(values wins max))))
+
+(defun best (fn lst)
+	(if (null lst)
+		nil
+		(let ((wins (car lst)))
+			(dolist (obj (cdr lst))
+				(if (funcall fn obj wins)
+					(setq wins obj)))
+			wins)))
+
+(defun most (fn lst)
+	(if (null lst)
+		(values nil nil)
+		(let ((result (list (car lst)))
+			  (max (funcall fn (car lst))))
+			(dolist (obj (cdr lst))
+				(let ((score (funcall fn obj)))
+					(cond ((> score max) (setq max score
+											   result (list obj)))
+						  ((= score max) (push obj result)))))
+			(values (nreverse result) max))))
+
+(defun map-> (fn start test-fn succ-fn)
+	(do ((i start (funcall succ-fn i))
+		 (result nil))
+		((funcall test-fn i) (nreverse result))
+		(push (funcall fn i) result)))
+
+
+(defun mapa-b (fn a b &optional (step 1))
+	(do ((i a (+ i step))
+		 (result nil))
+		((> i b) (nreverse result))
+		(push (funcall fn i) result)))
+
+(defun mapa-b (fn a b &optional (step 1))
+	(map-> fn
+		   a
+		   #'(lambda (x) (> x b))
+		   #'(lambda (x) (+ x step))))
+
+
+(defun map0-n (fn n)
+	(mapa-b fn 0 n))
+
+(defun map1-n (fn n)
+	(mapa-b fn 1 n))
+
+(defun our-mapcan (fn &rest lsts)
+	(apply #'nconc (apply #'mapcar fn lsts)))
+
+(defun my-mapcan (fn lsts)
+	(apply #'nconc (funcall #'mapcar fn lsts)))
+
+(defun normal-mapcan (fn &rest lsts)
+	(apply #'nconc (funcall #'mapcar fn lsts)))
+
+(defun mappend (fn &rest lsts)
+	(apply #'append (apply #'mapcar fn lsts)))
+
+(defun mapcars (fn &rest lsts)
+	(let ((result nil))
+		(dolist (lst lsts)
+			(dolist (obj lst)
+				(push (funcall fn obj) result)))
+		(nreverse result)))
+
+(defun rmapcar (fn &rest args)
+	(if (some #'atom args)
+		(apply fn args)
+		(apply #'mapcar #'(lambda (&rest args)
+							(apply #'rmapcar fn args))
+			   args)))
+		
+(defun readlist (&rest args)
+
 	
